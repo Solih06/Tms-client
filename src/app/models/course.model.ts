@@ -1,10 +1,13 @@
 export interface Course {
-    readonly id: number;
-    title: string;
-    capacity: number;
-    startDate: string; // ISO Date string (e.g. '2026-06-01')
+  id: string | number; // Allows both strings and numbers
+  title: string;
+  code?: string;
+  credits?: number;
+  openSeats?: number;
+  status?: string;
+  startDate: string;
+  capacity: number;
 }
-
 export type CourseStatus =
 | { status: "DRAFT"; createdBy: string; createdAt: string }
 | { status: "PUBLISHED"; publishedAt: string; syllabus: string }
