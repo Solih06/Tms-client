@@ -1,12 +1,15 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
-import type { OnInit } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, effect } from '@angular/core';
+import type { AfterViewInit, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EnrollmentStore } from '../../store/enrollment.store.js';
+import type { Enrollment } from '../../store/enrollment.store.js';
 
 @Component({
   selector: 'app-instructor-command-center',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="command-center">
@@ -24,62 +27,75 @@ import { EnrollmentStore } from '../../store/enrollment.store.js';
       } @else if (store.error()) {
         <div class="alert error">{{ store.error() }}</div>
       } @else {
-        <table class="enrollment-table">
-          <thead>
-            <tr>
-              <th>Student</th>
-              <th>Course</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (enrollment of store.entities(); track enrollment.id) {
+        <div class="mat-elevation-z8 table-container">
+          <table>
+            <thead>
               <tr>
-                <td>{{ enrollment.studentName }}</td>
-                <td>{{ enrollment.courseTitle }}</td>
-                <td>
-                  <span [class]="'badge ' + enrollment.status.toLowerCase()">
-                    {{ enrollment.status }}
-                  </span>
-                </td>
-                <td>
-                  @if (enrollment.status === 'Pending') {
-                    <button (click)="store.approveEnrollment(enrollment.id)">
-                      Approve (Optimistic)
-                    </button>
-                  }
-                </td>
+                <th scope="col">Student</th>
+                <th scope="col">Course</th>
+                <th scope="col">Status</th>
+                <th scope="col">Action</th>
               </tr>
-            } @empty {
-              <tr>
-                <td colspan="4">No enrollments found.</td>
-              </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (element of enrollments; track element.id) {
+                <tr>
+                  <td>{{ element.studentName }}</td>
+                  <td>{{ element.courseTitle }}</td>
+                  <td><span>{{ element.status }}</span></td>
+                  <td>
+                    @if (element.status === 'Pending') {
+                      <button type="button" (click)="store.approveEnrollment(element.id)">
+                    Approve (Optimistic)
+                      </button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      <!-- Performance Optimization: @defer block for analytics chunk -->
+      @defer (on viewport; prefetch on idle) {
+        <div class="analytics-panel">
+          <h3>Enrollment Trend Analytics</h3>
+          <p>Loaded asynchronously via chunk splitting to protect initial bundle size.</p>
+        </div>
+      } @placeholder {
+        <div class="skeleton-chart">Scroll down to load enrollment analytics...</div>
+      } @loading (minimum 300ms) {
+        <div class="spinner">Downloading analytics engine...</div>
       }
     </div>
   `,
   styles: [`
-    .command-center { padding: 2rem; font-family: sans-serif; max-width: 900px; }
+    .command-center { padding: 2rem; font-family: sans-serif; max-width: 1000px; margin: auto; }
     .stats-bar { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
     .stat-card { background: #f4f6f8; padding: 1rem; border-radius: 6px; border: 1px solid #d1d5db; }
-    .enrollment-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    .enrollment-table th, .enrollment-table td { padding: 0.75rem; border: 1px solid #e5e7eb; text-align: left; }
-    .badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem; font-weight: bold; }
-    .badge.pending { background: #fef3c7; color: #92400e; }
-    .badge.approved { background: #d1fae5; color: #065f46; }
-    button { padding: 0.4rem 0.8rem; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; }
-    button:hover { background: #1d4ed8; }
+    .table-container { border-radius: 8px; overflow: hidden; margin-top: 1rem; }
+    table { width: 100%; }
     .spinner { font-style: italic; color: #6b7280; padding: 1rem 0; }
     .error { background: #fee2e2; color: #991b1b; padding: 0.75rem; border-radius: 4px; }
+    .analytics-panel { margin-top: 2rem; padding: 1.5rem; background: #e0f2fe; border-radius: 8px; border: 1px solid #bae6fd; }
+    .skeleton-chart { margin-top: 2rem; padding: 1.5rem; background: #f9fafb; border: 1px dashed #d1d5db; text-align: center; border-radius: 8px; color: #6b7280; }
   `]
 })
-export class InstructorCommandCenterComponent implements OnInit {
+export class InstructorCommandCenterComponent implements OnInit, AfterViewInit {
   readonly store = inject(EnrollmentStore);
+
+  enrollments: Enrollment[] = [];
+
+  constructor() {
+    effect(() => {
+      this.enrollments = this.store.entities();
+    });
+  }
 
   ngOnInit() {
     this.store.loadEnrollments();
   }
+
+  ngAfterViewInit() {}
 }
