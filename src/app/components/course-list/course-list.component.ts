@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { CourseService, Course } from '../../services/course.service';
+import { CourseService, type Course } from '../../services/course.service.js';
 
 @Component({
   selector: 'app-course-list',

@@ -11,6 +11,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@angular/router": "^22.2.4",
     "@js-temporal/polyfill": "^0.5.1",
     "typescript": "^6.0.3"
   }

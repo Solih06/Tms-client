@@ -1,13 +1,13 @@
 import { Temporal } from "@js-temporal/polyfill";
-import type { Student } from "./models/student.model.ts";
-import { isStudent } from "./models/student.model.js";
-import { parseStudent } from "./models/student.model.js";
-import type { AssessmentItem } from "./models/assesment.model.ts";
-import { calculateGrade } from "./models/assesment.model.js";
-import type { EnrollmentStatus } from "./models/enrollment.model.ts";
-import { describeEnrollment } from "./models/enrollment.model.js";
-import type { CourseStatus } from "./models/course.model.ts";
-import { describeCourse } from "./models/course.model.js";
+import type { Student } from "./src/app/models/student.model.js";
+import { isStudent } from "./src/app/models/student.model.js";
+import { parseStudent } from "./src/app/models/student.model.js";
+import type { AssessmentItem } from "./src/app/models/assesment.model.js";
+import { calculateGrade } from "./src/app/models/assesment.model.js";
+import type { EnrollmentStatus } from "./src/app/models/enrollment.model.js";
+import { describeEnrollment } from "./src/app/models/enrollment.model.js";
+import type { CourseStatus } from "./src/app/models/course.model.js";
+import { describeCourse } from "./src/app/models/course.model.js";
 
 const student: Student = {
     id: "STU-001",
@@ -72,9 +72,9 @@ startDate: Temporal.PlainDate.from("2026-09-01"),
 };
 console.log(describeCourse(webDev));
 
-import type { ApiResponse } from "./models/api-response.model.ts"; 
-import  { renderResponse } from "./models/api-response.model.js";
-import type { Course } from "./models/course.model.js";
+import type { ApiResponse } from "./src/app/models/api-response.model.js"; 
+import  { renderResponse } from "./src/app/models/api-response.model.js";
+import type { Course } from "./src/app/models/course.model.js";
 const studentRes: ApiResponse<Student> = {
 status: "success",
 data: {
