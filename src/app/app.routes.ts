@@ -1,6 +1,6 @@
-import { Routes } from '@angular/router';
-import { InstructorCommandCenterComponent } from './features/instructor-command-center/instructor-command-center';
-import { instructorGuard } from './guards/instructor.guard';
+import type { Routes } from '@angular/router';
+import { InstructorCommandCenterComponent } from './features/instructor-command-center/instructor-command-center.js';
+import { instructorGuard } from './guards/instructor.guard.js';
 
 export const routes: Routes = [
   {
@@ -15,7 +15,7 @@ export const routes: Routes = [
   },
   {
     path: 'unauthorized',
-    loadComponent: () => import('./features/unauthorized/unauthorized').then(m => m.UnauthorizedComponent)
+    loadComponent: () => import('./features/unauthorized/unauthorized.component.js').then(m => m.UnauthorizedComponent)
   },
   {
     path: '**',
