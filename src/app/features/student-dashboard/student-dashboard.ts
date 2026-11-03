@@ -1,5 +1,4 @@
 import { Component, signal, computed, inject } from '@angular/core';
-import type { OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { isObservable, of, type Observable } from 'rxjs';
@@ -74,7 +73,7 @@ import type { Course } from '../../models/course.model.ts';
     .connection-banner.error { background: #f8d7da; color: #721c24; border-bottom: 1px solid #f5c6cb; }
   `]
 })
-export class StudentDashboardComponent implements OnInit {
+export class StudentDashboardComponent {
   private api = inject(CourseService);
   readonly store = inject(CourseStore);
   readonly hub = inject(CourseHubService);
@@ -96,11 +95,6 @@ export class StudentDashboardComponent implements OnInit {
   });
 
   enrolledCourse = signal<Course | null>(null);
-
-  ngOnInit() {
-    // Initialize SignalR real-time synchronization pulse on component load
-    this.store.initLiveUpdates();
-  }
 
   addCredits() {
     this.earnedCredits.update(c => c + 3);
