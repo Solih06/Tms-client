@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { CourseService, type Course } from '../../services/course.service.js';
+import { CourseService } from '../../services/course.service.js';
 
 @Component({
   selector: 'app-course-list',
@@ -39,7 +39,7 @@ import { CourseService, type Course } from '../../services/course.service.js';
 export class CourseListComponent {
   private courseService = inject(CourseService);
 
-  coursesResource = rxResource<Course[], void>({
+  coursesResource = rxResource({
     stream: () => this.courseService.getCourses()
   });
 }
