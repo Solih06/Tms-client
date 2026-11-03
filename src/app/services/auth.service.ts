@@ -1,43 +1,80 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../environments/environment.js';
+
+export interface TmsUser {
+  displayName: string;
+  role: string;
+  roles?: string[];
+}
+
+export interface LoginRequest {
+  username?: string;
+  email?: string;
+  password?: string;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly TOKEN_KEY = 'auth_token';
-  private readonly ROLES_KEY = 'user_roles';
+  private http = inject(HttpClient);
+  private base = `${environment.apiUrl}/auth`;
 
-  // Retrieve JWT token for the HTTP interceptor
-  getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+  // Reactive signal representing the currently authenticated user
+  currentUser = signal<TmsUser | null>(null);
+
+  // Authenticate user: server sets the HttpOnly tms_auth cookie automatically
+  async login(credentials: LoginRequest): Promise<void> {
+    await firstValueFrom(
+      this.http.post<void>(`${this.base}/login`, credentials, {
+        withCredentials: true
+      })
+    );
+
+    // Fetch the authenticated user profile using the cookie session
+    await this.loadUserProfile();
   }
 
-  // Store token upon successful login
-  setToken(token: string): void {
-    localStorage.setItem(this.TOKEN_KEY, token);
-  }
-
-  // Check if the user possesses a specific role (for the route guard)
-  hasRole(role: string): boolean {
-    const rolesJson = localStorage.getItem(this.ROLES_KEY);
-    if (!rolesJson) return false;
-    
+  // Load user profile via Cookie session
+  async loadUserProfile(): Promise<void> {
     try {
-      const roles: string[] = JSON.parse(rolesJson);
-      return roles.includes(role);
+      const user = await firstValueFrom(
+        this.http.get<TmsUser>(`${this.base}/me`, {
+          withCredentials: true
+        })
+      );
+      this.currentUser.set(user);
     } catch {
-      return false;
+      this.currentUser.set(null);
     }
   }
 
-  // Set roles upon login
-  setRoles(roles: string[]): void {
-    localStorage.setItem(this.ROLES_KEY, JSON.stringify(roles));
+  // Check if the current user possesses a specific role (for route guards)
+  hasRole(role: string): boolean {
+    const user = this.currentUser();
+    if (!user) return false;
+
+    // Check primary role or roles array
+    if (user.role === role) return true;
+    if (user.roles && user.roles.includes(role)) return true;
+
+    return false;
   }
 
   // Clear session on logout
-  logout(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.ROLES_KEY);
+  async logout(): Promise<void> {
+    try {
+      await firstValueFrom(
+        this.http.post<void>(`${this.base}/logout`, {}, {
+          withCredentials: true
+        })
+      );
+    } catch {
+      // Ignore network errors on logout
+    } finally {
+      this.currentUser.set(null);
+    }
   }
 }

@@ -1,20 +1,28 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment.js';
 import type { Course } from '../models/course.model.js';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CourseService {
-  getAll() {
-    throw new Error('Method not implemented.');
-  }
   private http = inject(HttpClient);
-  // Pointing to your hardened .NET 10 API endpoint
-  private apiUrl = 'https://localhost:5001/api/courses';
+  private readonly base = `${environment.apiUrl}/courses`;
 
+  // Matches your previous method name used in the component rxResource
+  getAll(): Observable<Course[]> {
+    return this.http.get<Course[]>(this.base);
+  }
+
+  // Alias if any component calls getCourses()
   getCourses(): Observable<Course[]> {
-    return this.http.get<Course[]>(this.apiUrl);
+    return this.getAll();
+  }
+
+  // Required for store optimistic delete actions
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${id}`);
   }
 }

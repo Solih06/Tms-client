@@ -12,7 +12,9 @@ export class CourseHubService {
 
   start() {
     this.connection = new HubConnectionBuilder()
-      .withUrl('/hubs/course')
+      .withUrl('/hubs/course', {
+        withCredentials: true // Required so the browser attaches your HttpOnly auth cookie during handshake
+      })
       .withAutomaticReconnect()
       .build();
 

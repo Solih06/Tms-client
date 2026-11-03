@@ -5,6 +5,7 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { isObservable, of, type Observable } from 'rxjs';
 import { CourseService } from '../../services/course.service.js';
 import { CourseStore } from '../../store/course.store.js';
+import { CourseHubService } from '../../services/course-hub.service.js';
 import { CourseCardComponent } from '../../ui/course-card/course-card.js';
 import { EnrollmentFormComponent } from '../enrollment-form/enrollment-form.js';
 import type { Course } from '../../models/course.model.ts';
@@ -14,6 +15,14 @@ import type { Course } from '../../models/course.model.ts';
   standalone: true,
   imports: [CommonModule, CourseCardComponent, EnrollmentFormComponent],
   template: `
+    <!-- Connection Status Banners (Exercise 3) -->
+    @if (hub.connectionState() === 'reconnecting') {
+      <div class="connection-banner warn">⚠️ Reconnecting to live updates...</div>
+    }
+    @if (hub.connectionState() === 'disconnected') {
+      <div class="connection-banner error">❌ Live updates unavailable. Check your connection.</div>
+    }
+
     <div class="dashboard-container">
       <h1>Welcome, {{ studentName() }}!</h1>
       <p>Credits: {{ earnedCredits() }}</p>
@@ -29,7 +38,8 @@ import type { Course } from '../../models/course.model.ts';
         <div class="alert">Failed to connect to TMS Server.</div>
       } @else {
         <div class="grid">
-          @for (course of coursesResource.value(); track course.id) {
+          <!-- Loop through store entities to reflect real-time SignalR patches -->
+          @for (course of store.entities(); track course.id) {
             <app-course-card 
               [course]="course" 
               (enrollClicked)="handleEnroll($event)" />
@@ -59,11 +69,15 @@ import type { Course } from '../../models/course.model.ts';
     .spinner { padding: 1rem; color: #666; font-style: italic; }
     .alert { padding: 1rem; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 4px; }
     .success-banner { margin-top: 1.5rem; padding: 1rem; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 6px; color: #2e7d32; }
+    .connection-banner { padding: 0.75rem 1.25rem; font-weight: 500; text-align: center; font-size: 0.9rem; }
+    .connection-banner.warn { background: #fff3cd; color: #856404; border-bottom: 1px solid #ffeeba; }
+    .connection-banner.error { background: #f8d7da; color: #721c24; border-bottom: 1px solid #f5c6cb; }
   `]
 })
 export class StudentDashboardComponent implements OnInit {
   private api = inject(CourseService);
   readonly store = inject(CourseStore);
+  readonly hub = inject(CourseHubService);
 
   studentName = signal('Liya Kebede');
   earnedCredits = signal(45);
@@ -72,7 +86,6 @@ export class StudentDashboardComponent implements OnInit {
     this.earnedCredits() >= 120 ? 'Eligible' : 'In Progress'
   );
 
-  // rxResource turns the Observable stream into robust Signals
   coursesResource = rxResource({
     stream: () => {
       const courses: unknown = this.api.getAll();
