@@ -34,5 +34,19 @@
     "@angular/cli": "^21.0.0",
     "@angular/compiler-cli": "^21.0.0",
     "typescript": "~5.5.0"
+  },
+  "proxyConfig": {
+  "/api": {
+    "target": "https://localhost:5166",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/hubs": {
+    "target": "https://localhost:5166",
+    "secure": false,
+    "ws": true
+  }
   }
 }
+  
+

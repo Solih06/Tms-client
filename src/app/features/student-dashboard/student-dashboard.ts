@@ -1,8 +1,10 @@
 import { Component, signal, computed, inject } from '@angular/core';
+import type { OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { isObservable, of, type Observable } from 'rxjs';
 import { CourseService } from '../../services/course.service.js';
+import { CourseStore } from '../../store/course.store.js';
 import { CourseCardComponent } from '../../ui/course-card/course-card.js';
 import { EnrollmentFormComponent } from '../enrollment-form/enrollment-form.js';
 import type { Course } from '../../models/course.model.ts';
@@ -20,7 +22,7 @@ import type { Course } from '../../models/course.model.ts';
 
       <hr style="margin: 2rem 0;" />
 
-      <h2>Course Catalog</h2>
+      <h2>Course Catalog (Live Synchronized)</h2>
       @if (coursesResource.isLoading()) {
         <div class="spinner">Fetching live courses...</div>
       } @else if (coursesResource.error()) {
@@ -59,8 +61,9 @@ import type { Course } from '../../models/course.model.ts';
     .success-banner { margin-top: 1.5rem; padding: 1rem; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 6px; color: #2e7d32; }
   `]
 })
-export class StudentDashboardComponent {
+export class StudentDashboardComponent implements OnInit {
   private api = inject(CourseService);
+  readonly store = inject(CourseStore);
 
   studentName = signal('Liya Kebede');
   earnedCredits = signal(45);
@@ -69,7 +72,7 @@ export class StudentDashboardComponent {
     this.earnedCredits() >= 120 ? 'Eligible' : 'In Progress'
   );
 
-  // rxResource automatically turns the Observable stream into robust Signals
+  // rxResource turns the Observable stream into robust Signals
   coursesResource = rxResource({
     stream: () => {
       const courses: unknown = this.api.getAll();
@@ -80,6 +83,11 @@ export class StudentDashboardComponent {
   });
 
   enrolledCourse = signal<Course | null>(null);
+
+  ngOnInit() {
+    // Initialize SignalR real-time synchronization pulse on component load
+    this.store.initLiveUpdates();
+  }
 
   addCredits() {
     this.earnedCredits.update(c => c + 3);
